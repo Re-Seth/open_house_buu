@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dobot Drawing App (Pro Theme)</title>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600&family=Press+Start+2P&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  /* ⭐️⭐️⭐️ ธีม Professional (Light Mode - Default) ⭐️⭐️⭐️ */
+  :root {
+    --bg1: #f8f9fa; /* Very light gray */
+    --bg2: #f8f9fa; /* Solid color */
+    --accent: #007bff; /* Professional Blue */
+    --muted: #6c757d; /* Muted text */
+    --card: #ffffff; /* White cards */
+  }
+
+  * { box-sizing: border-box }
+  body {
+    /* ⭐️ ใช้ฟอนต์ระบบที่อ่านง่ายสำหรับเนื้อหาทั่วไป */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    color: #212529; /* Dark text */
+    background: var(--bg1);
+    padding: 20px;
+    min-height: 100vh;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .app {
+    max-width: 1100px; margin: 12px auto; padding: 22px; border-radius: 16px;
+    background: transparent; /* No app background */
+    border: none;
+    box-shadow: none;
+  }
+  
+  /* ⭐️ ใช้ฟอนต์ Chakra Petch สำหรับหัวเรื่องและปุ่ม */
+  h1, h3, button {
+    font-family: 'Chakra Petch', sans-serif;
+    font-weight: 600;
+  }
+  
+  header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap }
+  h1 {
+    color: #111;
+    margin: 0; font-size: 24px;
+    text-shadow: none;
+  }
+  .subtitle, .small, label { color: var(--muted) }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center }
+
+  /* ⭐️ ปุ่มและ Input แบบ Professional */
+  button, select, input[type="file"], input[type="number"] {
+    padding: 10px 14px; border-radius: 10px; border: 1px solid #ced4da; font-weight: 600; cursor: pointer;
+    background-color: #f8f9fa;
+    color: #495057;
+    text-shadow: none; /* ลบเงาตัวอักษรทั้งหมด */
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  }
+  button {
+    background-color: #fff;
+    color: #333;
+  }
+  button:disabled {
+    background-color: #e9ecef;
+    color: #adb5bd;
+    border-color: #e9ecef;
+    cursor: not-allowed;
+  }
+  button.btn-small { padding: 5px 10px; font-size: 12px; }
+  
+  /* ⭐️ ปุ่มสีทึบ (Solid Colors) */
+  .btn-primary {
+    background-color: #007bff;
+    color: #fff; border-color: #007bff;
+  }
+  .btn-secondary {
+    background-color: #6c757d;
+    color: #fff; border-color: #6c757d;
+  }
+  .btn-danger {
+    background-color: #dc3545;
+    color: #fff; border-color: #dc3545;
+  }
+  .btn-success {
+    background-color: #28a745;
+    color: #fff; border-color: #28a745;
+  }
+  
+  input[type="number"], input[type="file"] {
+      background-color: #fff;
+  }
+
+  .row { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap }
+  .col { flex: 1; min-width: 260px }
+  
+  /* ⭐️ การ์ดสีขาว "ลอย" */
+  .card {
+    padding: 20px; /* เพิ่ม padding */
+    border-radius: 12px;
+    background: var(--card);
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); /* เงาที่นุ่มนวล */
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+  
+  .status-box { padding: 10px; border-radius: 8px; margin-bottom: 8px; font-weight: 700; }
+  .status-disconnected { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+  .status-connected, .status-idle { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+  .status-loading, .status-processing { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+  .status-drawing { background: #e2d9f3; color: #495057; border: 1px solid #d6cadd; }
+  .status-paused { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+  .status-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+  .progress-wrap { margin-top: 12px }
+  .progress-container { height: 18px; background: #e9ecef; border-radius: 12px; border: 1px solid #dee2e6; overflow: hidden }
+  .progress-bar { height: 100%; width: 0%; background: var(--accent); transition: width .25s ease } /* ไม่มี Gradient */
+  .progress-meta { display: flex; justify-content: space-between; margin-top: 6px; font-size: 13px; color: var(--muted) }
+  
+  .image-compare { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; justify-content: center }
+  .image-box { background: #f8f9fa; padding: 10px; border-radius: 10px; border: 1px solid #e0e0e0; min-width: 170px; max-width: 320px; text-align: center }
+  .image-box img { max-width: 100%; border-radius: 6px; display: block; margin: 8px auto; border: 2px solid #ced4da }
+  .image-box-large { max-width: none; flex-grow: 1; }
+  .image-box-large img { max-height: 450px; object-fit: contain; }
+
+  .log-box {
+    font-family: monospace; font-size: 13px; max-height: 220px; overflow: auto; padding: 10px; border-radius: 8px;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    color: #333;
+  }
+  .log-line { padding: 4px 0; border-bottom: 1px dashed rgba(0, 0, 0, 0.05) }
+  .form-group { display: flex; gap: 8px; align-items: center; flex-wrap: wrap }
+  .corner-inputs { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+  .corner-group { justify-content: space-between; }
+  .corner-group label { min-width: 80px; }
+  
+  .toast { position: fixed; right: 20px; bottom: 20px; background: #333; color: #fff; padding: 12px 16px; border-radius: 10px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2); display: none; z-index: 9999 }
+  .modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); display: none; align-items: center; justify-content: center; z-index: 999; padding: 20px; }
+  .modal .modal-card { background: var(--card); padding: 24px; border-radius: 12px; max-width: 760px; width: 100%; border: 1px solid #e0e0e0; max-height: 90vh; overflow-y: auto; }
+  .modal h2 { margin-top: 0; color: var(--accent) }
+  .modal h3 { color: #333; border-bottom: 1px solid #e0e0e0; padding-bottom: 8px; }
+  .modal li { margin-bottom: 10px; }
+  
+  footer { margin-top: 18px; text-align: center; color: var(--muted); font-size: 13px }
+
+  #processingStep2, #processingStep3 {
+    margin-top: 12px; padding: 10px; background: rgba(0, 123, 255, 0.05);
+    border-radius: 8px; border: 1px dashed var(--accent);
+  }
+  
+  input[type="file"]::file-selector-button {
+    padding: 8px 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer;
+    background: #e9ecef; color: #495057; text-shadow: none; margin-right: 10px;
+  }
+
+  @media (max-width: 760px) {
+    header { flex-direction: column; align-items: flex-start }
+    .row { flex-direction: column }
+  }
+  /* ⭐️⭐️⭐️ จบธีม Professional ⭐️⭐️⭐️ */
+  
+
+  /* ⭐️⭐️⭐️ Dark Mode Overrides ⭐️⭐️⭐️ */
+  body.dark-mode {
+    --bg1: #121212;
+    --bg2: #121212;
+    --card: #1e1e1e;
+    --muted: #888;
+    color: #e0e0e0;
+  }
+  body.dark-mode .app { background: transparent; }
+  body.dark-mode h1, body.dark-mode h3 { color: #fff; }
+  body.dark-mode .card {
+    background: var(--card);
+    border: 1px solid #333;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  body.dark-mode button, 
+  body.dark-mode select, 
+  body.dark-mode input[type="file"], 
+  body.dark-mode input[type="number"] {
+    background-color: #2a2a2a;
+    color: #e0e0e0;
+    border: 1px solid #444;
+  }
+  body.dark-mode button:disabled {
+    background-color: #2a2a2a;
+    color: #555;
+    border-color: #333;
+  }
+  body.dark-mode .btn-primary { background-color: #007bff; color: #fff; border-color: #007bff; }
+  body.dark-mode .btn-secondary { background-color: #5a5a5a; color: #fff; border-color: #5a5a5a; }
+  body.dark-mode .btn-danger { background-color: #dc3545; color: #fff; border-color: #dc3545; }
+  body.dark-mode .btn-success { background-color: #28a745; color: #fff; border-color: #28a745; }
+  
+  body.dark-mode .status-disconnected { background: #5a1d1d; color: #ffacac; border: 1px solid #dc3545; }
+  body.dark-mode .status-connected, body.dark-mode .status-idle { background: #003300; color: #99ff99; border: 1px solid #28a745; }
+  body.dark-mode .status-loading, body.dark-mode .status-processing { background: #003333; color: #99ffff; border: 1px solid #17a2b8; }
+  body.dark-mode .status-drawing { background: #330033; color: #ff99ff; border: 1px solid #ff00ff; }
+  body.dark-mode .status-paused { background: #333300; color: #ffff99; border: 1px solid #ffc107; }
+
+  body.dark-mode .progress-container { background: #2a2a2a; border: 1px solid #444; }
+  body.dark-mode .image-box { background: #2a2a2a; border: 1px solid #333; }
+  body.dark-mode .image-box img { border: 2px solid #444; }
+  body.dark-mode .log-box { background: #121212; border: 1px solid #333; color: #e0e0e0; }
+  body.dark-mode .log-line { border-bottom: 1px dashed rgba(255, 255, 255, 0.1); }
+  body.dark-mode .toast { background: #1e1e1e; color: #fff; border: 1px solid #333; }
+  body.dark-mode .modal { background: rgba(0, 0, 0, 0.7); }
+  body.dark-mode .modal .modal-card { background: var(--card); border: 1px solid #333; }
+  body.dark-mode .modal h2 { color: var(--accent); }
+  body.dark-mode .modal h3, body.dark-mode .modal li { color: #e0e0e0; }
+  body.dark-mode .modal h3 { border-bottom: 1px solid #333; }
+  body.dark-mode #processingStep2, body.dark-mode #processingStep3 { background: rgba(0, 123, 255, 0.1); }
+  body.dark-mode input[type="file"]::file-selector-button {
+    background: #333; color: #e0e0e0;
+  }
+  /* ⭐️⭐️⭐️ จบ Dark Mode ⭐️⭐️⭐️ */
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Dobot Drawing App 🎨🤖</h1>
+        <p class="subtitle">Convert images to line art for drawing with Dobot Magician</p>
+      </div>
+      <div style="margin-left:auto" class="controls">
+        <button id="themeToggleBtn" class="btn-secondary" style="width: 50px; font-family: sans-serif;">🌙</button>
+        <button id="quickUploadBtn" class="btn-success">☁️ Upload to PC</button>
+        <button id="helpBtn" class="btn-secondary">Help / QR</button>
+      </div>
+    </header>
+
+    <div class="row" style="margin-top:12px">
+      <div class="col card">
+        <div id="statusMessage" class="status-box status-disconnected">Status: Disconnected</div>
+        <div id="dobotInfo" style="display:none">
+          <div class="small">Model: <strong id="dobotModel">-</strong> &nbsp; | &nbsp; Port: <strong id="dobotPort">-</strong></div>
+        </div>
+        <div style="margin-top:10px" class="controls">
+          <button id="connectBtn" class="btn-primary">Connect Dobot</button>
+          <button id="disconnectBtn" class="btn-secondary" disabled>Disconnect</button>
+        </div>
+        
+        <div style="margin-top:10px; border-top: 1px solid #e0e0e0; padding-top: 10px;" class="form-group">
+          <label class="small">Speed (%):</label>
+          <input id="speedInput" type="number" min="1" max="100" value="50" style="width:80px">
+          
+          <label class="small">Offset (mm):</label>
+          <input id="penOffsetInput" type="number" step="0.5" value="0" style="width:80px" title="Pen pressure offset (positive = deeper)">
+          
+          <label class="small">Safety (mm):</label>
+          <input id="safetyHeightInput" type="number" step="0.5" value="-40" style="width:80px" title="Height when lifting the pen">
+        </div>
+        
+      </div>
+      
+      <div class="col card">
+        <h3 style="margin:0 0 8px 0">Paper Calibration</h3>
+        <p class="small" style="margin-top:0">Move Dobot to the paper corners and press "Set", or enter coordinates manually.</p>
+        <div class="corner-inputs">
+          <div class="form-group corner-group">
+            <label>Top-Left:</label>
+            <div>
+                <input id="tl_x" type="number" placeholder="X" style="width:80px">
+                <input id="tl_y" type="number" placeholder="Y" style="width:80px">
+            </div>
+            <button id="setTlBtn" class="btn-secondary btn-small" disabled>Set</button>
+          </div>
+          <div class="form-group corner-group">
+            <label>Top-Right:</label>
+            <div>
+                <input id="tr_x" type="number" placeholder="X" style="width:80px">
+                <input id="tr_y" type="number" placeholder="Y" style="width:80px">
+            </div>
+            <button id="setTrBtn" class="btn-secondary btn-small" disabled>Set</button>
+          </div>
+          <div class="form-group corner-group">
+            <label>Bottom-Left:</label>
+            <div>
+                <input id="bl_x" type="number" placeholder="X" style="width:80px">
+                <input id="bl_y" type="number" placeholder="Y" style="width:80px">
+            </div>
+            <button id="setBlBtn" class="btn-secondary btn-small" disabled>Set</button>
+          </div>
+          <div class="form-group corner-group">
+            <label>Bottom-Right:</label>
+            <div>
+                <input id="br_x" type="number" placeholder="X" style="width:80px">
+                <input id="br_y" type="number" placeholder="Y" style="width:80px">
+            </div>
+            <button id="setBrBtn" class="btn-secondary btn-small" disabled>Set</button>
+          </div>
+        </div>
+        <div style="margin-top:12px" class="controls">
+          <button id="applyCornersBtn" class="btn-primary" disabled>Apply 4 Corners</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row">
+      <div class="col card">
+        <h3 style="margin:0 0 8px 0">Upload & Prepare</h3>
+        <div class="form-group">
+          <input id="imageInput" type="file" accept="image/*">
+          </div>
+        <div style="margin-top:8px" class="controls">
+          <button id="processBtn" class="btn-primary" disabled>1. Process Image</button>
+          <button id="drawBtn" class="btn-danger" disabled>3. Start Drawing</button>
+        </div>
+        
+        <div id="processingStep2" style="display:none">
+          <label for="paramChoice" class="small">ดูภาพ 'Comparison' ด้านล่าง แล้วเลือก:</label>
+          <div class="controls">
+            <input id="paramChoice" type="number" min="1" max="5" value="1" style="width:100px">
+            <button id="selectParamBtn" class="btn-primary">2. Generate Paths</button>
+          </div>
+        </div>
+        
+        <div id="processingStep3" style="display:none">
+          <label for="startContour" class="small">ดู 'All Steps' ในโฟลเดอร์ หรือเริ่มจาก 1:</label>
+          <div class="controls">
+            <input id="startContour" type="number" min="1" value="1" style="width:120px">
+            <label id="totalContoursLabel" class="small"></label>
+          </div>
+        </div>
+
+        <div class="image-compare">
+          <div class="image-box image-box-large">
+            <div class="small"><strong>Comparison / Vector</strong></div>
+            <img id="vectorImagePreview" alt="Vector" style="display:none">
+          </div>
+        </div>
+        </div>
+      
+      <div class="col card">
+        <h3 style="margin:0 0 8px 0">Drawing Controls & Progress</h3>
+        <div class="controls">
+          <button id="pauseBtn" class="btn-secondary" disabled>Pause</button>
+          <button id="resumeBtn" class="btn-secondary" disabled>Resume</button>
+          <button id="stopBtn" class="btn-danger" disabled>Stop</button>
+        </div>
+        <div style="margin-top:12px" class="progress-wrap">
+          <div class="progress-container"><div id="progressBar" class="progress-bar"></div></div>
+          <div class="progress-meta">
+            <div id="progressText">Progress: 0%</div>
+            <div id="timeMeta" class="small">Elapsed: 0s | ETA: -</div>
+          </div>
+        </div>
+
+        <h4 style="margin:16px 0 8px 0; color:var(--muted); font-weight:normal;">Reference Images</h4>
+        <div class="image-compare" style="justify-content: space-around;">
+          <div class="image-box"><div class="small"><strong>Original</strong></div><img id="originalImagePreview" alt="Original" style="display:none"></div>
+          <div class="image-box"><div class="small"><strong>B&W (Processed)</strong></div><img id="lineartImagePreview" alt="B&W" style="display:none"></div>
+        </div>
+        </div>
+    </div>
+
+    <div class="row">
+      <div class="col card">
+        <h3 style="margin:0 0 8px 0">Log Console</h3>
+        <div id="logBox" class="log-box"></div>
+        <div style="margin-top:8px; display:flex; gap:8px; justify-content:space-between; align-items:center">
+          <div class="small">Real-time logs from actions</div>
+          <div><button id="clearLogBtn" class="btn-secondary">Clear</button><button id="downloadLogBtn" class="btn-secondary">Download</button></div>
+        </div>
+      </div>
+    </div>
+
+    <footer>Dobot Drawing App for Hardware Control</footer>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <div id="uploadModal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <h2>☁️ Upload Pictures to PC</h2>
+      <p style="color:var(--muted)">
+        เลือกรูปจากมือถือเพื่อส่งไปเก็บที่เครื่องคอมพิวเตอร์ (Server)<br>
+        (บันทึกลง: <code>static/mobile_uploads</code>)
+      </p>
+      
+      <div style="margin-top:20px; text-align:center;">
+          <input type="file" id="mobileInput" accept="image/*" multiple style="display:block; margin:0 auto 10px auto;">
+          <button id="doUploadBtn" class="btn-success">Upload Now</button>
+      </div>
+      <p id="uploadStatus" style="text-align:center; margin-top:10px; color:#aaa; font-size:14px;"></p>
+
+      <div style="text-align:right; margin-top:20px">
+          <button id="closeUploadBtn" class="btn-secondary">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="helpModal" class="modal" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <h2>How to Use & Mobile Access</h2>
+      
+      <div style="background:rgba(0, 123, 255, 0.1); padding:15px; border-radius:8px; text-align:center; margin-bottom:20px;">
+          <h3 style="margin-top:0; color:#333;">📲 Scan to Open on Mobile</h3>
+          <div id="qrcode" style="display:inline-block; background:#fff; padding:10px; border-radius:4px;"></div>
+          <p style="margin:10px 0 0 0; font-family:monospace; color:var(--accent);">
+             http://{{ server_ip }}:{{ server_port }}
+          </p>
+          <p class="small">(Make sure your phone is on the same Wi-Fi)</p>
+      </div>
+
+      <h3>Basic Instructions</h3>
+      <ul style="color:#333;line-height:1.6; padding-left:20px">
+        <li><strong>Connect:</strong> Connect USB & press 'Connect Dobot'.</li>
+        <li><strong>Calibrate:</strong> Move pen to corners & click 'Set'.</li>
+        <li><strong>Process:</strong> Upload image -> Process -> Select Style.</li>
+        <li><strong>Draw:</strong> Adjust speed/height -> Start Drawing.</li>
+      </ul>
+      <div style="text-align:right; margin-top:12px"><button id="closeHelpBtn" class="btn-primary">Close</button></div>
+    </div>
+  </div>
+
+
+<script>
+// --- Globals & Element Refs ---
+const toastEl = document.getElementById('toast');
+const logBox = document.getElementById('logBox');
+const statusMessage = document.getElementById('statusMessage');
+
+const connectBtn = document.getElementById('connectBtn');
+const disconnectBtn = document.getElementById('disconnectBtn');
+const applyCornersBtn = document.getElementById('applyCornersBtn');
+const processBtn = document.getElementById('processBtn');
+const selectParamBtn = document.getElementById('selectParamBtn'); 
+const drawBtn = document.getElementById('drawBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const resumeBtn = document.getElementById('resumeBtn');
+const stopBtn = document.getElementById('stopBtn');
+
+const imageInput = document.getElementById('imageInput');
+const paramChoiceInput = document.getElementById('paramChoice'); 
+const startContourInput = document.getElementById('startContour'); 
+const totalContoursLabel = document.getElementById('totalContoursLabel'); 
+
+const processingStep2 = document.getElementById('processingStep2'); 
+const processingStep3 = document.getElementById('processingStep3'); 
+
+const originalImagePreview = document.getElementById('originalImagePreview');
+const lineartImagePreview = document.getElementById('lineartImagePreview'); 
+const vectorImagePreview = document.getElementById('vectorImagePreview'); 
+
+const progressBar = document.getElementById('progressBar');
+const progressText = document.getElementById('progressText');
+const timeMeta = document.getElementById('timeMeta');
+const dobInfo = { container: document.getElementById('dobotInfo'), model: document.getElementById('dobotModel'), port: document.getElementById('dobotPort') };
+
+const cornerInputs = {
+    tl_x: document.getElementById('tl_x'), tl_y: document.getElementById('tl_y'),
+    tr_x: document.getElementById('tr_x'), tr_y: document.getElementById('tr_y'),
+    bl_x: document.getElementById('bl_x'), bl_y: document.getElementById('bl_y'),
+    br_x: document.getElementById('br_x'), br_y: document.getElementById('br_y'),
+};
+const setCornerBtns = {
+    tl: document.getElementById('setTlBtn'), tr: document.getElementById('setTrBtn'),
+    bl: document.getElementById('setBlBtn'), br: document.getElementById('setBrBtn'),
+};
+
+let pollingIntervalId = null;
+let drawingStartTime = null;
+let currentStatus = 'disconnected'; 
+let dfcallPollIntervalId = null; 
+
+// --- Utility Functions ---
+function showToast(msg, ms = 3000) {
+  toastEl.innerText = msg;
+  toastEl.style.display = 'block';
+  setTimeout(() => { toastEl.style.display = 'none'; }, ms);
+}
+
+function addLog(msg) {
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  const now = new Date().toLocaleTimeString();
+  line.textContent = `[${now}] ${msg}`;
+  logBox.appendChild(line);
+  logBox.scrollTop = logBox.scrollHeight;
+}
+function clearLog() { logBox.innerHTML = ''; addLog('Log cleared.'); }
+function downloadLog() {
+  const text = Array.from(logBox.querySelectorAll('.log-line')).map(e => e.textContent).join('\n');
+  const blob = new Blob([text], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `dobot_log_${new Date().toISOString()}.txt`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function formatDuration(sec) {
+  if (!sec) return '0s'; if (sec < 60) return `${sec}s`;
+  const m = Math.floor(sec/60); const s = sec % 60;
+  return `${m}m ${s}s`;
+}
+
+// --- API Call Function ---
+async function apiPost(path, body = null, isForm = false) {
+  try {
+    const opts = { method: 'POST' };
+    if (isForm) {
+        opts.body = body;
+    } else {
+        opts.headers = { 'Content-Type': 'application/json' };
+        opts.body = JSON.stringify(body || {});
+    }
+    const res = await fetch(path, opts);
+    const resJson = await res.json();
+    if (!res.ok) {
+        const errorMsg = resJson.message || `HTTP ${res.status}`;
+        addLog(`[HTTP Error ${res.status}] API ${path} failed: ${errorMsg}`);
+        throw new Error(errorMsg);
+    }
+    return resJson;
+  } catch (err) {
+    addLog(`[API ERROR] ${path}: ${err.message}`);
+    setStatus('error', `API Error: ${err.message}`);
+    return { status: 'error', message: err.message };
+  }
+}
+
+async function apiGet(path) {
+  try {
+    const res = await fetch(path, {cache: 'no-store'}); 
+    const resJson = await res.json();
+    if (!res.ok) {
+        const errorMsg = resJson.message || `HTTP ${res.status}`;
+        addLog(`[HTTP Error ${res.status}] API ${path} failed: ${errorMsg}`);
+        throw new Error(errorMsg);
+    }
+    return resJson;
+  } catch (err) {
+    addLog(`[API ERROR] ${path}: ${err.message}`);
+    setStatus('error', `API Error: ${err.message}`);
+    return { status: 'error', message: err.message };
+  }
+}
+
+function setStatus(statusType, message) {
+  if (statusType !== 'processing') stopDfcallPolling();
+  if (statusType !== 'drawing' && statusType !== 'paused') stopDrawingPolling();
+  
+  currentStatus = statusType;
+  statusMessage.textContent = 'Status: ' + (message || statusType);
+  statusMessage.className = `status-box status-${statusType}`;
+  
+  const isConnected = statusType === 'connected' || statusType === 'idle' || statusType === 'processing' || statusType === 'drawing' || statusType === 'paused' || statusType === 'error';
+  const isIdle = statusType === 'idle' || statusType === 'connected'; 
+  const isDrawing = statusType === 'drawing' || statusType === 'paused';
+  const isProcessing = statusType === 'processing';
+  
+  connectBtn.disabled = isConnected;
+  disconnectBtn.disabled = !isConnected || isDrawing || isProcessing;
+  applyCornersBtn.disabled = !isIdle;
+  Object.values(setCornerBtns).forEach(btn => btn.disabled = !isIdle);
+  const hasImage = imageInput.files.length > 0;
+  processBtn.disabled = !isIdle || !hasImage;
+  const hasProcessed = processingStep2.style.display !== 'none';
+  selectParamBtn.disabled = !isIdle || !hasProcessed;
+  const hasPaths = processingStep3.style.display !== 'none';
+  drawBtn.disabled = !isIdle || !hasPaths;
+  pauseBtn.disabled = statusType !== 'drawing';
+  resumeBtn.disabled = statusType !== 'paused';
+  stopBtn.disabled = !isDrawing;
+  if (!isIdle) {
+      if (!isDrawing) {
+          processingStep2.style.display = 'none';
+          processingStep3.style.display = 'none';
+      }
+  }
+  if (statusType === 'disconnected') {
+      processingStep2.style.display = 'none';
+      processingStep3.style.display = 'none';
+  }
+}
+
+function showProgress(percent, message) {
+  if (percent < 0) percent = 0; if (percent > 100) percent = 100;
+  progressBar.style.width = percent + '%';
+  const etaMatch = message.match(/\| (ETA:.*)/);
+  const etaText = etaMatch ? etaMatch[1] : '-';
+  const mainMessage = etaMatch ? message.replace(etaMatch[0], '') : message;
+  progressText.textContent = `Progress: ${percent.toFixed(1)}% — ${mainMessage || ''}`;
+  const elapsedSec = drawingStartTime ? Math.floor((Date.now() - drawingStartTime)/1000) : 0;
+  timeMeta.textContent = `Elapsed: ${formatDuration(elapsedSec)} | ${etaText}`;
+  if (percent >= 100) drawingStartTime = null;
+}
+
+function resetProgress() {
+  progressBar.style.width = '0%';
+  progressText.textContent = 'Progress: 0%';
+  timeMeta.textContent = 'Elapsed: 0s | ETA: -';
+  drawingStartTime = null;
+}
+
+// --- ⭐️ Logic สำหรับ Modal & Upload ⭐️ ---
+const uploadModal = document.getElementById('uploadModal');
+const helpModal = document.getElementById('helpModal');
+
+document.getElementById('helpBtn').addEventListener('click', ()=> helpModal.style.display='flex');
+document.getElementById('closeHelpBtn').addEventListener('click', ()=> helpModal.style.display='none');
+helpModal.addEventListener('click',(e)=>{ if(e.target===helpModal) helpModal.style.display='none' });
+
+document.getElementById('quickUploadBtn').addEventListener('click', ()=> {
+    uploadModal.style.display='flex';
+    document.getElementById('uploadStatus').textContent = ''; 
+});
+document.getElementById('closeUploadBtn').addEventListener('click', ()=> uploadModal.style.display='none');
+uploadModal.addEventListener('click',(e)=>{ if(e.target===uploadModal) uploadModal.style.display='none' });
+
+document.getElementById('doUploadBtn').addEventListener('click', async () => {
+    const fileInput = document.getElementById('mobileInput');
+    const statusText = document.getElementById('uploadStatus');
+    
+    if (fileInput.files.length === 0) {
+        statusText.textContent = '❌ Please select file(s).'; return;
+    }
+
+    statusText.textContent = '⏳ Uploading...';
+    const form = new FormData();
+    // Loop เพื่อใส่หลายไฟล์
+    for (let i = 0; i < fileInput.files.length; i++) {
+        form.append('images', fileInput.files[i]);
+    }
+    
+    const res = await apiPost('/quick_upload', form, true);
+    if (res && res.status === 'success') {
+        statusText.textContent = `✅ ${res.message}`;
+        statusText.style.color = '#155724';
+        showToast('Upload complete!');
+        addLog(`Mobile upload success: ${res.filenames.length} files`);
+    } else {
+        statusText.textContent = `❌ Failed: ${res ? res.message : 'Error'}`;
+        statusText.style.color = '#721c24';
+    }
+});
+
+// --- ⭐️ สร้าง QR Code อัตโนมัติ ⭐️ ---
+// (ค่า server_ip และ server_port จะถูกแทนที่โดย Flask ตอน render)
+const serverIP = "{{ server_ip }}"; 
+const serverPort = "{{ server_port }}";
+if (serverIP && serverPort) {
+    const url = `http://${serverIP}:${serverPort}`;
+    new QRCode(document.getElementById("qrcode"), {
+        text: url,
+        width: 128,
+        height: 128
+    });
+    console.log("QR Generated for:", url);
+}
+// ----------------------------------
+
+connectBtn.addEventListener('click', async () => {
+  setStatus('loading', 'Connecting...');
+  const res = await apiPost('/connect');
+  if (res && res.status.includes('success')) {
+    setStatus('idle', res.message || 'Connected');
+    dobInfo.container.style.display = 'block'; 
+    dobInfo.model.textContent = res.model || 'Unknown'; 
+    dobInfo.port.textContent = res.port || '-';
+    showToast('Dobot connected');
+  } else {
+    setStatus('disconnected', res.message || 'Connection failed');
+    showToast('Connection failed');
+  }
+});
+
+disconnectBtn.addEventListener('click', async () => {
+  setStatus('loading', 'Disconnecting...'); 
+  const res = await apiPost('/disconnect');
+  setStatus('disconnected', res.message || 'Disconnected'); 
+  dobInfo.container.style.display = 'none';
+  showToast('Disconnected');
+});
+
+async function setCurrentPositionForCorner(cornerPrefix) {
+    if (currentStatus === 'disconnected') { showToast('Error: Please connect Dobot first.'); return; }
+    addLog(`Requesting current position for ${cornerPrefix.toUpperCase()}...`);
+    const data = await apiGet('/get_position'); 
+    if (data.status === 'success') {
+        cornerInputs[`${cornerPrefix}_x`].value = data.x;
+        cornerInputs[`${cornerPrefix}_y`].value = data.y;
+        addLog(`Set ${cornerPrefix.toUpperCase()} to (X: ${data.x}, Y: ${data.y})`);
+        showToast(`${cornerPrefix.toUpperCase()} position set!`);
+    } else {
+        addLog(`Error getting position: ${data.message}`);
+        showToast('Error: Could not get position');
+    }
+}
+Object.keys(setCornerBtns).forEach(key => {
+    setCornerBtns[key].addEventListener('click', () => setCurrentPositionForCorner(key));
+});
+
+applyCornersBtn.addEventListener('click', async () => {
+    const corners = {
+        tl: [parseFloat(cornerInputs.tl_x.value), parseFloat(cornerInputs.tl_y.value)],
+        tr: [parseFloat(cornerInputs.tr_x.value), parseFloat(cornerInputs.tr_y.value)],
+        bl: [parseFloat(cornerInputs.bl_x.value), parseFloat(cornerInputs.bl_y.value)],
+        br: [parseFloat(cornerInputs.br_x.value), parseFloat(cornerInputs.br_y.value)], 
+    };
+    for(const key in corners) {
+        if(isNaN(corners[key][0]) || isNaN(corners[key][1])) {
+            showToast('Error: All corner values must be numbers.'); return;
+        }
+    }
+    setStatus('processing', 'Setting corners...');
+    const res = await apiPost('/set_paper_corners', { corners });
+    if (res.status?.includes('success')) {
+        setStatus('idle', res.message || 'Corners set');
+        showToast('4 corners applied');
+    } else {
+        setStatus('idle', res.message || 'Failed to set corners');
+        showToast('Set corners failed');
+    }
+});
+
+imageInput.addEventListener('change',(e)=>{
+  const file = e.target.files[0]; 
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    originalImagePreview.src = ev.target.result; 
+    originalImagePreview.style.display = 'block';
+    lineartImagePreview.style.display = 'none'; lineartImagePreview.src = '';
+    vectorImagePreview.style.display = 'none'; vectorImagePreview.src = '';
+    resetProgress();
+    addLog('Image selected: ' + file.name);
+    processingStep2.style.display = 'none';
+    processingStep3.style.display = 'none';
+    setStatus(currentStatus, statusMessage.textContent.replace('Status: ', ''));
+  };
+  reader.readAsDataURL(file);
+});
+
+processBtn.addEventListener('click', async () => {
+  const file = imageInput.files[0]; 
+  if (!file) { alert('Please select an image file first.'); return; }
+  lineartImagePreview.style.display = 'none';
+  vectorImagePreview.style.display = 'none';
+  processingStep2.style.display = 'none';
+  processingStep3.style.display = 'none';
+  resetProgress(); 
+  setStatus('processing', 'Starting DFCall (Step 1/3)...');
+  addLog('Started processing image (DFCall)...'); 
+  showToast('Processing image... (This may take 20-30s)');
+  const form = new FormData();
+  form.append('image', file);
+  const res = await apiPost('/process_image', form, true);
+  if (res?.status?.includes('processing_started')) {
+    addLog('DFCall started... Polling for result.');
+    setStatus('processing', 'Processing DFCall... (Polling)');
+    startDfcallPolling(); 
+  } else {
+    setStatus('idle', res.message || 'Process start failed');
+    addLog('Process start failed: ' + (res.message || JSON.stringify(res))); 
+    showToast('Process start failed');
+  }
+});
+
+function startDfcallPolling() {
+  if (dfcallPollIntervalId) clearInterval(dfcallPollIntervalId);
+  dfcallPollIntervalId = setInterval(async () => {
+      addLog('Polling: Checking DFCall status...');
+      const res = await apiGet('/check_processing'); 
+      if (res.status === 'processing') {
+          setStatus('processing', res.message || 'DFCall is running...');
+      } else if (res.status === 'success') {
+          stopDfcallPolling();
+          addLog('Process success: ' + (res.message || ''));
+          const cacheBuster = `?t=${Date.now()}`;
+          originalImagePreview.src = res.original_url + cacheBuster;
+          originalImagePreview.style.display = 'block';
+          lineartImagePreview.src = res.bw_image_url + cacheBuster; 
+          lineartImagePreview.style.display = 'block';
+          vectorImagePreview.src = res.comparison_url + cacheBuster; 
+          vectorImagePreview.style.display = 'block';
+          processingStep2.style.display = 'block';
+          setStatus('idle', res.message || 'Ready for Step 2'); 
+          showToast('Processing complete! Select parameters.');
+      } else if (res.status === 'error') {
+          stopDfcallPolling();
+          setStatus('idle', res.message || 'Process failed');
+          showToast('Process failed');
+      }
+  }, 1000); 
+}
+function stopDfcallPolling() {
+    if (dfcallPollIntervalId) { clearInterval(dfcallPollIntervalId); dfcallPollIntervalId = null; }
+}
+
+selectParamBtn.addEventListener('click', async () => {
+    const choice = parseInt(paramChoiceInput.value);
+    if (isNaN(choice) || choice < 1 || choice > 5) { showToast('Please enter a number between 1 and 5.'); return; }
+    processingStep3.style.display = 'none';
+    setStatus('processing', 'Generating paths (Step 2/3)...');
+    addLog(`User selected parameter choice: ${choice}. Generating paths...`);
+    showToast('Generating paths and all_steps...');
+    const res = await apiPost('/select_parameters', { choice_index: choice - 1 });
+    if (res?.status?.includes('success')) {
+        addLog('Path generation success. Ready to draw.');
+        const cacheBuster = `?t=${Date.now()}`;
+        vectorImagePreview.src = res.lineart_url + cacheBuster;
+        processingStep3.style.display = 'block';
+        startContourInput.value = 1;
+        startContourInput.max = res.total_contours;
+        totalContoursLabel.textContent = `(Total: ${res.total_contours} contours)`;
+        setStatus('idle', res.message || 'Ready for Step 3');
+        showToast('Paths generated! Ready to draw.');
+    } else {
+        setStatus('idle', res.message || 'Path generation failed');
+        addLog('Path generation failed: ' + (res.message || JSON.stringify(res)));
+        showToast('Path generation failed');
+    }
+});
+
+drawBtn.addEventListener('click', async () => {
+  if (drawBtn.disabled) return;
+  const startContour = parseInt(startContourInput.value);
+  const maxContour = parseInt(startContourInput.max || 1);
+  if (isNaN(startContour) || startContour < 1 || startContour > maxContour) {
+      showToast(`Error: Start contour must be between 1 and ${maxContour}`); return;
+  }
+  resetProgress(); 
+  setStatus('drawing', 'Starting drawing...');
+  addLog('Start drawing requested'); 
+  drawingStartTime = Date.now();
+  
+  const body = {
+    start_contour: startContour,
+    speed: Number(document.getElementById('speedInput').value),
+    pen_offset: Number(document.getElementById('penOffsetInput').value),
+    safety_height: Number(document.getElementById('safetyHeightInput').value)
+  };
+  
+  const res = await apiPost('/start_drawing', body);
+  if (res.status?.includes('success')) {
+    addLog('Backend started drawing: ' + (res.message || ''));
+    startDrawingPolling(); 
+  } else {
+    setStatus('idle', res.message || 'Start drawing failed');
+    addLog('Start drawing failed: ' + (res.message || JSON.stringify(res)));
+    showToast('Start drawing failed');
+  }
+});
+
+async function fetchDrawingProgressOnce() { 
+  try {
+    const r = await fetch('/progress', {cache: 'no-store'});
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } catch (err) {
+    addLog('Progress fetch error: ' + err.message);
+    setStatus('disconnected', 'Connection lost');
+    stopDrawingPolling();
+    return null;
+  }
+}
+
+async function startDrawingPolling() { 
+  if (pollingIntervalId) clearInterval(pollingIntervalId);
+  pollingIntervalId = setInterval(async () => {
+    const d = await fetchDrawingProgressOnce();
+    if (d) updateProgressFromServer(d);
+  }, 750); 
+}
+function stopDrawingPolling() { 
+    if (pollingIntervalId) { clearInterval(pollingIntervalId); pollingIntervalId = null; } 
+}
+
+function updateProgressFromServer(d) {
+  if (currentStatus !== d.status && !(d.status === 'idle' && d.progress < 100)) {
+    setStatus(d.status, d.message);
+  }
+  showProgress(d.progress || 0, d.message || 'Drawing');
+  if (d.progress_image_url) {
+      const newImageUrl = d.progress_image_url;
+      if (vectorImagePreview.src !== newImageUrl) {
+          vectorImagePreview.src = newImageUrl; 
+          vectorImagePreview.style.display = 'block';
+      }
+  }
+  if (d.status === 'idle' || d.status === 'error') {
+    stopDrawingPolling(); 
+    if (d.progress >= 100) {
+        addLog(`Drawing finished. Status: ${d.message}`);
+        showToast(d.message);
+    } else if (d.status === 'error') {
+        addLog(`Backend error: ${d.message}`);
+        showToast(`Error: ${d.message}`);
+    } else {
+        addLog(`Drawing terminated. Status: ${d.message}`);
+        showToast(d.message);
+    }
+    setStatus('idle', d.message);
+  }
+}
+
+pauseBtn.addEventListener('click', async () => {
+  addLog('Pause requested');
+  const res = await apiPost('/pause');
+  if (res.status?.includes('success')) { showToast('Paused'); } 
+  else { addLog('Pause failed: ' + (res.message||'')); showToast('Pause failed'); }
+});
+resumeBtn.addEventListener('click', async () => {
+  addLog('Resume requested');
+  const res = await apiPost('/resume');
+  if (res.status?.includes('success')) { showToast('Resumed'); } 
+  else { addLog('Resume failed: ' + (res.message||'')); showToast('Resume failed'); }
+});
+stopBtn.addEventListener('click', async () => {
+  addLog('Stop requested');
+  const res = await apiPost('/stop');
+  if (res.status?.includes('success')) {
+    setStatus('processing', 'Stopping...'); 
+    addLog('Stop signal sent. Waiting for Dobot to halt...'); 
+    showToast('Stopping...');
+  } else { addLog('Stop failed: ' + (res.message||'')); showToast('Stop failed'); }
+});
+
+document.getElementById('clearLogBtn').addEventListener('click', clearLog);
+document.getElementById('downloadLogBtn').addEventListener('click', downloadLog);
+
+// --- Initial State ---
+setStatus('disconnected', 'Disconnected');
+addLog('Application loaded. Please connect Dobot to begin.');
+
+
+// --- ⭐️ Dark Mode Toggle Logic ⭐️ ---
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+const currentTheme = localStorage.getItem('theme');
+
+// On page load, check saved theme
+if (currentTheme === 'dark') {
+    document.body.classList.add('dark-mode');
+    themeToggleBtn.textContent = '☀️';
+} else {
+    themeToggleBtn.textContent = '🌙';
+}
+
+// Add click event listener
+themeToggleBtn.addEventListener('click', () => {
+    if (document.body.classList.contains('dark-mode')) {
+        // Switch to Light Mode
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('theme', 'light');
+        themeToggleBtn.textContent = '🌙';
+    } else {
+        // Switch to Dark Mode
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('theme', 'dark');
+        themeToggleBtn.textContent = '☀️';
+    }
+});
+// --- ⭐️ End of Dark Mode Logic ⭐️ ---
+</script>
+</body>
+</html>
